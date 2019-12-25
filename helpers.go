@@ -19,15 +19,16 @@ func getListOfFields(m *ast.StructType) []string {
 	for f := range m.Fields.List {
 		names :=  m.Fields.List[f].Names
 		for _, name := range names {
-			fields = append(fields, ToSnakeCase(name.Name))
+			fields = append(fields, toSnakeCase(name.Name))
 		}
 	}
 	return fields
 }
-var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-func ToSnakeCase(str string) string {
+
+func toSnakeCase(str string) string {
+	var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	snake  = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
 	return strings.ToLower(snake)

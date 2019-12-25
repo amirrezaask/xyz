@@ -1,4 +1,5 @@
 package main
+
 //@xyz
 type Book struct {
 	Name, Title string
@@ -8,10 +9,7 @@ type Book struct {
 
 //@xyz
 type BookRepository interface {
-	FindByNameAndId(name string) // select * from books where name=$name
+	FindByNameAndId(name string)
 	UpdateNameAndFamilyNameBasedOnId(name string, fname string, id string)
 	DeleteByName(name string)
 }
-
-
-
