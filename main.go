@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -25,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ast.Print(fset,pf)
+	//ast.Print(fset,pf)
 	var xyzDecs []ast.Decl
 	for d := range pf.Decls {
 		if strings.Contains(pf.Decls[d].(*ast.GenDecl).Doc.Text(), "@xyz") {
@@ -47,6 +48,7 @@ func main() {
 		}
 	}
 	methods := getListOfMethodsOfInterface(repo)
+	parseMethodName(methods)
 }
 
 
@@ -55,11 +57,28 @@ func parseFindMethod(method string) []string {
 	queryParams := strings.Split(method, "By")[1]
 	return strings.Split(queryParams, "And")
 }
-func parseUpdateMethod(method string) []string {
+func parseUpdateMethod(method string, tableName string) string {
 	//UpdateNameAndFNameBasedOnAge
+	//UPDATE %s SET column1 = value1, column2 = value2, ... WHERE condition
 	selectParams := strings.Split(strings.Split(method, "BasedOn")[1], "And")
-	updateParams := (strings.Split(method, "BasedOn")[0])[6:]
+	updateParams := strings.Split(strings.Split(method, "BasedOn")[0][6:], "And")
 
+	query := fmt.Sprintf("UPDATE %s SET ", tableName)
+
+	var updateParamslist []string
+	for _, updateParam := range updateParams{
+		updateParamslist = append(updateParamslist, fmt.Sprintf("%s = ?", updateParam))
+	}
+
+	query += strings.Join(updateParamslist, ", ") + " WHERE "
+
+	var selectParamslist []string
+	for _, selectParam := range selectParams{
+		selectParamslist = append(selectParamslist, fmt.Sprintf("%s = ?", selectParam))
+	}
+	query += strings.Join(selectParamslist, " AND ")
+
+	return  query
 }
 type query struct {
 	typ string
@@ -70,19 +89,18 @@ func parseMethodName(methods []string) query{
 	//update
 	//delete
 	for _, name := range methods {
+		fmt.Println("\n name", name)
 		if name[:4] == "Find" {
-			return query{"select",parseFindMethod(name)}
+			//return query{"select",parseFindMethod(name)}
 		} else if name[:6] == "Update" {
-			return query{
-				typ:    "",
-				params: nil,
-			}
+			fmt.Println("\n query ", parseUpdateMethod(name, "test"))
 		} else if name[:6] == "Delete" {
 
 		} else {
 			log.Fatalf("Method name %s is not valid\n", name)
 		}
 	}
+	return query{}
 }
 
 func getListOfMethodsOfInterface(i *ast.InterfaceType) []string {
