@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -10,6 +11,7 @@ import (
 	"strings"
 )
 
+var fset = token.NewFileSet()
 
 
 func main() {
@@ -20,7 +22,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fset := token.NewFileSet()
 	pf, err := parser.ParseFile(fset, "", bs, parser.ParseComments)
 	if err != nil {
 		log.Fatal(err)
@@ -45,5 +46,15 @@ func main() {
 			repo = asInterface
 		}
 	}
-	ast.Print(fset, model)
+	methods := getListOfMethodsOfInterface(repo)
+	fmt.Println(methods)
+
+}
+
+func getListOfMethodsOfInterface(i *ast.InterfaceType) []string {
+	var names []string
+	for l := range i.Methods.List {
+		names = append(names, i.Methods.List[l].Names[0].Name)
+	}
+	return names
 }
