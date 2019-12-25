@@ -48,79 +48,11 @@ func main() {
 		}
 	}
 	methods := getListOfMethodsOfInterface(repo)
-	parseMethodName(methods)
-}
-
-const SELECT = "SELECT * FROM %s WHERE %s"
-func selectGenerator(tableName, method string) string {
-	queryParams := strings.Split(method, "By")[1]
-	params := strings.Split(queryParams, "And")
-	var paramsAndQuestions []string
-	for p := range params {
-		paramsAndQuestions = append(paramsAndQuestions, fmt.Sprintf("%s=?", params[p]))
+	methods = append(methods, "INSERT")
+	fields := getListOfFields(model)
+	for m := range methods {
+		fmt.Println(generate(methods[m], fields))
 	}
-	return fmt.Sprintf(SELECT, tableName, strings.Join(paramsAndQuestions, "AND"))
-}
-const DELETE = "DELETE FROM %s WHERE %s"
-func deleteGenerator(tableName, method string) string {
-	queryParams := strings.Split(method, "By")[1]
-	params := strings.Split(queryParams, "And")
-	var paramsAndQuestions []string
-	for p := range params {
-		paramsAndQuestions = append(paramsAndQuestions, fmt.Sprintf("%s=?", params[p]))
-	}
-	return fmt.Sprintf(DELETE, tableName, strings.Join(paramsAndQuestions, "AND"))
-}
-func parseUpdateMethod(method string, tableName string) string {
-	//UpdateNameAndFNameBasedOnAge
-	//UPDATE %s SET column1 = value1, column2 = value2, ... WHERE condition
-	selectParams := strings.Split(strings.Split(method, "BasedOn")[1], "And")
-	updateParams := strings.Split(strings.Split(method, "BasedOn")[0][6:], "And")
-
-	query := fmt.Sprintf("UPDATE %s SET ", tableName)
-
-	var updateParamslist []string
-	for _, updateParam := range updateParams{
-		updateParamslist = append(updateParamslist, fmt.Sprintf("%s = ?", updateParam))
-	}
-
-	query += strings.Join(updateParamslist, ", ") + " WHERE "
-
-	var selectParamslist []string
-	for _, selectParam := range selectParams{
-		selectParamslist = append(selectParamslist, fmt.Sprintf("%s = ?", selectParam))
-	}
-	query += strings.Join(selectParamslist, " AND ")
-
-	return  query
-}
-type query struct {
-	typ string
-	params []string
-}
-func parseMethodName(methods []string) query{
-	//find
-	//update
-	//delete
-	for _, name := range methods {
-		fmt.Println("\n name", name)
-		if name[:4] == "Find" {
-			//return query{"select",parseFindMethod(name)}
-		} else if name[:6] == "Update" {
-			fmt.Println("\n query ", parseUpdateMethod(name, "test"))
-		} else if name[:6] == "Delete" {
-
-		} else {
-			log.Fatalf("Method name %s is not valid\n", name)
-		}
-	}
-	return query{}
+	fmt.Println()
 }
 
-func getListOfMethodsOfInterface(i *ast.InterfaceType) []string {
-	var names []string
-	for l := range i.Methods.List {
-		names = append(names, i.Methods.List[l].Names[0].Name)
-	}
-	return names
-}

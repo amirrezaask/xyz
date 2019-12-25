@@ -1,15 +1,14 @@
 package main
-
-//@xyz Model
+//@xyz
 type Book struct {
-	Name string
+	Name, Title string
 	Author int
 }
 
-//@xyz Repo
+//@xyz
 type BookRepository interface {
-	FindByName(name string) // select * from books where name=$name
-	UpdateNameAndFNameBasedOnId(name string, fname string, id string)
+	FindByNameAndId(name string) // select * from books where name=$name
+	UpdateNameAndFamilyNameBasedOnId(name string, fname string, id string)
 	DeleteByName(name string)
 }
 
