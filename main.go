@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -49,11 +50,15 @@ func main() {
 	methods := getListOfMethodsOfInterface(repo)
 }
 
-
-func parseFindMethod(method string) []string {
-	//findByNameAndId
+const SELECT = "SELECT * from %s WHERE %s"
+func selectGenerator(tableName, method string) string {
 	queryParams := strings.Split(method, "By")[1]
-	return strings.Split(queryParams, "And")
+	params := strings.Split(queryParams, "And")
+	var paramsAndQuestions []string
+	for p := range params {
+		paramsAndQuestions = append(paramsAndQuestions, fmt.Sprintf("%s=?", params[p]))
+	}
+	return fmt.Sprintf(SELECT, tableName, strings.Join(paramsAndQuestions, "AND"))
 }
 func parseUpdateMethod(method string) []string {
 	//UpdateNameAndFNameBasedOnAge
