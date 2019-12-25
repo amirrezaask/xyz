@@ -3,6 +3,7 @@ package main
 type Book struct {
 	Name, Title string
 	Author int
+	PriceWithFee int
 }
 
 //@xyz

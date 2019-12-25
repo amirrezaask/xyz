@@ -10,8 +10,10 @@ const SELECT = "SELECT * FROM %s WHERE %s"
 const DELETE = "DELETE FROM %s WHERE %s"
 const UPDATE = "UPDATE %s SET "
 const INSERT = "INSERT INTO %s (%s) VALUES (%s)"
-
-func generate(name string, fields []string) string {
+func Generate(tableName, name string, fields []string) string {
+	return generate(tableName, name, fields)
+}
+func generate(tableName, name string, fields []string) string {
 	if name[:4] == "Find" {
 		return selectGenerator("", name)
 	} else if name[:6] == "Update" {

@@ -35,12 +35,15 @@ func main() {
 	}
 	var model *ast.StructType
 	var repo *ast.InterfaceType
+	var name string
 	_ , _ = model, repo
 	for x := range xyzDecs {
 		typeSpec := xyzDecs[x].(*ast.GenDecl).Specs[0].(*ast.TypeSpec)
 		asStruct, isStruct := typeSpec.Type.(*ast.StructType)
 		if isStruct {
+			name = typeSpec.Name.Name
 			model = asStruct
+			continue
 		}
 		asInterface, isInterface := typeSpec.Type.(*ast.InterfaceType)
 		if isInterface {
@@ -51,8 +54,7 @@ func main() {
 	methods = append(methods, "INSERT")
 	fields := getListOfFields(model)
 	for m := range methods {
-		fmt.Println(generate(methods[m], fields))
+		fmt.Println(generate(name, methods[m], fields))
 	}
-	fmt.Println()
 }
 
