@@ -10,6 +10,7 @@ type Book struct {
 type BookRepository interface {
 	FindByName(name string) // select * from books where name=$name
 	UpdateNameAndFNameBasedOnId(name string, fname string, id string)
+	DeleteByName(name string)
 }
 
 

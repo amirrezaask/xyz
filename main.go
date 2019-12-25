@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -13,11 +12,11 @@ import (
 
 var fset = token.NewFileSet()
 
-
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatal("You need to pass the file name")
 	}
+
 	bs, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
@@ -26,6 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	ast.Print(fset,pf)
 	var xyzDecs []ast.Decl
 	for d := range pf.Decls {
 		if strings.Contains(pf.Decls[d].(*ast.GenDecl).Doc.Text(), "@xyz") {
@@ -47,8 +47,42 @@ func main() {
 		}
 	}
 	methods := getListOfMethodsOfInterface(repo)
-	fmt.Println(methods)
+}
 
+
+func parseFindMethod(method string) []string {
+	//findByNameAndId
+	queryParams := strings.Split(method, "By")[1]
+	return strings.Split(queryParams, "And")
+}
+func parseUpdateMethod(method string) []string {
+	//UpdateNameAndFNameBasedOnAge
+	selectParams := strings.Split(strings.Split(method, "BasedOn")[1], "And")
+	updateParams := (strings.Split(method, "BasedOn")[0])[6:]
+
+}
+type query struct {
+	typ string
+	params []string
+}
+func parseMethodName(methods []string) query{
+	//find
+	//update
+	//delete
+	for _, name := range methods {
+		if name[:4] == "Find" {
+			return query{"select",parseFindMethod(name)}
+		} else if name[:6] == "Update" {
+			return query{
+				typ:    "",
+				params: nil,
+			}
+		} else if name[:6] == "Delete" {
+
+		} else {
+			log.Fatalf("Method name %s is not valid\n", name)
+		}
+	}
 }
 
 func getListOfMethodsOfInterface(i *ast.InterfaceType) []string {
