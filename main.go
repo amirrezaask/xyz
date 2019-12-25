@@ -50,7 +50,7 @@ func main() {
 	methods := getListOfMethodsOfInterface(repo)
 }
 
-const SELECT = "SELECT * from %s WHERE %s"
+const SELECT = "SELECT * FROM %s WHERE %s"
 func selectGenerator(tableName, method string) string {
 	queryParams := strings.Split(method, "By")[1]
 	params := strings.Split(queryParams, "And")
@@ -59,6 +59,16 @@ func selectGenerator(tableName, method string) string {
 		paramsAndQuestions = append(paramsAndQuestions, fmt.Sprintf("%s=?", params[p]))
 	}
 	return fmt.Sprintf(SELECT, tableName, strings.Join(paramsAndQuestions, "AND"))
+}
+const DELETE = "DELETE FROM %s WHERE %s"
+func deleteGenerator(tableName, method string) string {
+	queryParams := strings.Split(method, "By")[1]
+	params := strings.Split(queryParams, "And")
+	var paramsAndQuestions []string
+	for p := range params {
+		paramsAndQuestions = append(paramsAndQuestions, fmt.Sprintf("%s=?", params[p]))
+	}
+	return fmt.Sprintf(DELETE, tableName, strings.Join(paramsAndQuestions, "AND"))
 }
 func parseUpdateMethod(method string) []string {
 	//UpdateNameAndFNameBasedOnAge
