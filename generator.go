@@ -128,7 +128,6 @@ func typeOfMethod(name string) string {
 	} else if name[:6] == "Insert" {
 		return "Insert"
 	} else {
-		fmt.Println(">>", name)
 		return ""
 	}
 }
