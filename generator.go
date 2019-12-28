@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/token"
 	"log"
 	"strings"
 )
@@ -12,9 +13,13 @@ const SELECT = "SELECT * FROM %s WHERE %s"
 const DELETE = "DELETE FROM %s WHERE %s"
 const UPDATE = "UPDATE %s SET "
 const INSERT = "INSERT INTO %s (%s) VALUES (%s)"
+
 type method struct {
-	name, query string
+	name, query, typ string
 }
+
+var fset = token.NewFileSet()
+
 func Generate(bs []byte) []*method {
 	pf, err := parser.ParseFile(fset, "", bs, parser.ParseComments)
 	if err != nil {
@@ -29,7 +34,7 @@ func Generate(bs []byte) []*method {
 	var model *ast.StructType
 	var repo *ast.InterfaceType
 	var name string
-	_ , _ = model, repo
+	_, _ = model, repo
 	for x := range xyzDecs {
 		typeSpec := xyzDecs[x].(*ast.GenDecl).Specs[0].(*ast.TypeSpec)
 		asStruct, isStruct := typeSpec.Type.(*ast.StructType)
@@ -44,25 +49,26 @@ func Generate(bs []byte) []*method {
 		}
 	}
 	methods := getListOfMethodsOfInterface(repo)
-	methods = append(methods, "INSERT")
+	methods = append(methods, "Insert")
 	fields := getListOfFields(model)
 	var generatedMethods []*method
 	for m := range methods {
-		generatedMethods = append(generatedMethods, &method{methods[m], generate(name, methods[m], fields)})
+		generatedMethods = append(generatedMethods, &method{methods[m], generate(name, methods[m], fields), typeOfMethod(methods[m])})
 	}
 	return generatedMethods
 }
 func generate(tableName, name string, fields []string) string {
-	if name[:4] == "Find" {
+	typ := typeOfMethod(name)
+	if typ == "Find" {
 		return selectGenerator(tableName, name)
-	} else if name[:6] == "Update" {
+	} else if typ == "Update" {
 		return updateGenerator(tableName, name)
-	} else if name[:6] == "Delete" {
+	} else if typ == "Delete" {
 		return deleteGenerator(tableName, name)
-	} else if name[:6] == "INSERT" {
+	} else if typ == "Insert" {
 		return insertGenerator(tableName, fields)
 	} else {
-		log.Fatalf("Method name %s is not valid\n", name)
+		log.Fatalf("Method name %s is not valid\n", typ)
 		return ""
 	}
 }
@@ -91,14 +97,14 @@ func updateGenerator(tableName string, method string) string {
 	query := fmt.Sprintf(UPDATE, tableName)
 
 	var updateParamslist []string
-	for _, updateParam := range updateParams{
+	for _, updateParam := range updateParams {
 		updateParamslist = append(updateParamslist, fmt.Sprintf("%s = ?", updateParam))
 	}
 
 	query += strings.Join(updateParamslist, ", ") + " WHERE "
 
 	var selectParamslist []string
-	for _, selectParam := range selectParams{
+	for _, selectParam := range selectParams {
 		selectParamslist = append(selectParamslist, fmt.Sprintf("%s = ?", selectParam))
 	}
 	query += strings.Join(selectParamslist, " AND ")
@@ -110,5 +116,19 @@ func insertGenerator(tableName string, fields []string) string {
 	for range fields {
 		questions = append(questions, "?")
 	}
-	return fmt.Sprintf(INSERT, tableName, strings.Join(fields, ", "),strings.Join(questions, ", "))
+	return fmt.Sprintf(INSERT, tableName, strings.Join(fields, ", "), strings.Join(questions, ", "))
+}
+func typeOfMethod(name string) string {
+	if name[:4] == "Find" {
+		return "Find"
+	} else if name[:6] == "Update" {
+		return "Update"
+	} else if name[:6] == "Delete" {
+		return "Delete"
+	} else if name[:6] == "Insert" {
+		return "Insert"
+	} else {
+		fmt.Println(">>", name)
+		return ""
+	}
 }
