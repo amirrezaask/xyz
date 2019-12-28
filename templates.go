@@ -31,10 +31,12 @@ func (f *funcTemplateData) IsSlice(s string) bool {
 }
 
 type fileTemplateData struct {
+	PackageName string
+	Methods     string
 }
 
-const file = `package {{}}
-
+const file = `package {{.PackageName}}
+	{{.Methods}}
 
 `
 
