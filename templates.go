@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"html/template"
 	"strings"
+	"text/template"
 )
 
 func Generate(templateName string, data interface{}) (string, error) {
@@ -44,36 +44,40 @@ func (f *funcTemplateData) IsSlice(s []string) bool {
 
 type fileTemplateData struct {
 	PackageName string
-	Methods     string
+	Codes       string
 }
 
 const file = `package {{.PackageName}}
-	{{.Methods}}
+	{{.Codes}}
 
 `
 
-const newFunc = `func New(db *sql.DB) ({{.ReturnType}}, error) {
-	return &{{.SelfType}}{
+type newTemplateData struct {
+	AbstractName, ImplName string
+}
+
+const newFunc = `func New{{.AbstractName}}(db *sql.DB) ({{.AbstractName}}, error) {
+	return &{{.ImplName}}{
 		db
 	}
 }`
-const execFunc = `func (r {{.SelfType}}) {{.Name}}(args ...interface{}) error {
-	_, err := db.Exec({{.Query}})
+const execFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) error {
+	_, err := db.Exec("{{.Query}}")
 	if err != nil {
 		return err
 	}
 	return nil
 }`
-const queryFunc = `func (r {{.SelfType}}) {{.Name}}(args ...interface{}) ({{.ReturnsCommaSeperated}}) {
+const queryFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) ({{.ReturnsCommaSeperated}}) {
 	var ret {{.ReturnWithoutError}}
 	{{if .IsSlice .ReturnType}}
-	err := db.Select(&ret, {{.Query}}, args...)
+	err := db.Select(&ret, "{{.Query}}", args...)
 	if err != nil {
 		return nil, err
 	}
 	return ret, nil
 	{{else}}
-	res, err := db.Get(&ret, {{.Query}}, args...)
+	res, err := db.Get(&ret, "{{.Query}}", args...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +90,9 @@ const repoStruct = `type {{.SelfType}} struct {
 }`
 
 var Templates = map[string]string{
-	"new":   newFunc,
-	"exec":  execFunc,
-	"query": queryFunc,
-	"file":  file,
+	"new":    newFunc,
+	"exec":   execFunc,
+	"query":  queryFunc,
+	"file":   file,
+	"struct": repoStruct,
 }

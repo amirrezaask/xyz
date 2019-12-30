@@ -25,7 +25,7 @@ type method struct {
 
 var fset = token.NewFileSet()
 
-func Parse(bs []byte) []*method {
+func Parse(bs []byte) ([]*method, string, string) {
 	pf, err := parser.ParseFile(fset, "", bs, parser.ParseComments)
 	if err != nil {
 		log.Fatal(err)
@@ -39,6 +39,7 @@ func Parse(bs []byte) []*method {
 	var model *ast.StructType
 	var repo *ast.InterfaceType
 	var name string
+	var interfaceName string
 	for x := range xyzDecs {
 		typeSpec := xyzDecs[x].(*ast.GenDecl).Specs[0].(*ast.TypeSpec)
 		asStruct, isStruct := typeSpec.Type.(*ast.StructType)
@@ -49,6 +50,7 @@ func Parse(bs []byte) []*method {
 		}
 		asInterface, isInterface := typeSpec.Type.(*ast.InterfaceType)
 		if isInterface {
+			interfaceName = typeSpec.Name.Name
 			repo = asInterface
 		}
 	}
@@ -56,7 +58,7 @@ func Parse(bs []byte) []*method {
 	fields := getListOfFields(model)
 	methods := getMethodsFromInterface(repo, fields, name)
 
-	return methods
+	return methods, interfaceName, interfaceName + "G"
 
 }
 func generate(tableName, methodName string, fields []string) string {
