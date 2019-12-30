@@ -62,7 +62,7 @@ const newFunc = `func New{{.AbstractName}}(db *sql.DB) ({{.AbstractName}}, error
 	}
 }`
 const execFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) error {
-	_, err := db.Exec("{{.Query}}")
+	_, err := db.NamedExec("{{.Query}}", args...)
 	if err != nil {
 		return err
 	}
