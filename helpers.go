@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-func getMethodsFromInterface(i *ast.InterfaceType, fields []string, modelName string) []*methodGenerator {
-	var methods []*methodGenerator
+func getMethodsFromInterface(i *ast.InterfaceType, fields []string, modelName string) []*method {
+	var methods []*method
 	for l := range i.Methods.List {
 		var params []string
 		var results []string
@@ -19,17 +19,23 @@ func getMethodsFromInterface(i *ast.InterfaceType, fields []string, modelName st
 		}
 		if len(i.Methods.List[l].Type.(*ast.FuncType).Results.List) > 0 {
 			for _, r := range i.Methods.List[l].Type.(*ast.FuncType).Results.List {
-				results = append(results, fmt.Sprint(r.Type))
+				asSlice, isSlice := r.Type.(*ast.ArrayType)
+				if isSlice {
+					results = append(results, fmt.Sprintf("[]%s", asSlice.Elt.(*ast.Ident).Name))
+				} else {
+					results = append(results, r.Type.(*ast.Ident).Name)
+				}
 			}
 		}
 
-		methods = append(methods, &methodGenerator{
-			name:    i.Methods.List[l].Names[0].Name,
-			typ:     typeOfMethod(i.Methods.List[l].Names[0].Name),
-			args:    params,
-			query:   generate(modelName, i.Methods.List[l].Names[0].Name, fields),
-			fields:  fields,
-			returns: results,
+		methods = append(methods, &method{
+			name:     i.Methods.List[l].Names[0].Name,
+			typ:      typeOfMethod(i.Methods.List[l].Names[0].Name),
+			args:     params,
+			query:    generate(modelName, i.Methods.List[l].Names[0].Name, fields),
+			fields:   fields,
+			returns:  results,
+			selfType: modelName,
 		})
 	}
 	return methods

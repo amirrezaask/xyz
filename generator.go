@@ -14,7 +14,8 @@ const DELETE = "DELETE FROM %s WHERE %s"
 const UPDATE = "UPDATE %s SET "
 const INSERT = "INSERT INTO %s (%s) VALUES (%s)"
 
-type methodGenerator struct {
+type method struct {
+	selfType  string
 	name, typ string
 	args      []string
 	fields    []string
@@ -24,7 +25,7 @@ type methodGenerator struct {
 
 var fset = token.NewFileSet()
 
-func Generate(bs []byte) []*methodGenerator {
+func Parse(bs []byte) []*method {
 	pf, err := parser.ParseFile(fset, "", bs, parser.ParseComments)
 	if err != nil {
 		log.Fatal(err)
@@ -51,7 +52,6 @@ func Generate(bs []byte) []*methodGenerator {
 			repo = asInterface
 		}
 	}
-	//			query: generate(name, methods[m], fields),
 
 	fields := getListOfFields(model)
 	methods := getMethodsFromInterface(repo, fields, name)

@@ -7,10 +7,21 @@ import (
 
 func main() {
 	bs, _ := ioutil.ReadFile("book.go")
-	methods := Generate(bs)
+	methods := Parse(bs)
 	for _, method := range methods {
-		fmt.Printf("%+v\n", method)
+		templateData := &funcTemplateData{
+			SelfType:   method.selfType,
+			Name:       method.name,
+			ReturnType: method.returns,
+			Query:      method.query,
+		}
+		fun, err := Generate(typ2typ[method.typ], templateData)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(fun)
 	}
+
 }
 
 var typ2typ = map[string]string{

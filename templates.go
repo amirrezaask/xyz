@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func New(templateName string, data interface{}) (string, error) {
+func Generate(templateName string, data interface{}) (string, error) {
 	t, err := template.New("tpl").Parse(Templates[templateName])
 	if err != nil {
 		return "", err
@@ -22,12 +22,24 @@ func New(templateName string, data interface{}) (string, error) {
 type funcTemplateData struct {
 	SelfType   string
 	Name       string
-	ReturnType string
+	ReturnType []string
 	Query      string
 }
 
-func (f *funcTemplateData) IsSlice(s string) bool {
-	return strings.Contains(s, "[]")
+func (f *funcTemplateData) ReturnWithoutBracket() string {
+	return f.ReturnType[0][2:]
+}
+func (f *funcTemplateData) ReturnsCommaSeperated() string {
+	return strings.Join(f.ReturnType, ", ")
+}
+func (f *funcTemplateData) ReturnWithoutError() string {
+	return f.ReturnType[0]
+}
+func (f *funcTemplateData) IsSlice(s []string) bool {
+	if len(s) > 2 {
+		panic("length of return types should not be greater than 2")
+	}
+	return strings.Contains(s[0], "[]")
 }
 
 type fileTemplateData struct {
@@ -52,28 +64,16 @@ const execFunc = `func (r {{.SelfType}}) {{.Name}}(args ...interface{}) error {
 	}
 	return nil
 }`
-const queryFunc = `func (r {{.SelfType}}) {{.Name}}(args ...interface{}) ({{.ReturnType}}, error) {
-	var ret {{.ReturnType}}
+const queryFunc = `func (r {{.SelfType}}) {{.Name}}(args ...interface{}) ({{.ReturnsCommaSeperated}}) {
+	var ret {{.ReturnWithoutError}}
 	{{if .IsSlice .ReturnType}}
-	res, err := db.Query({{.Query}}, args...)
+	err := db.Select(&ret, {{.Query}}, args...)
 	if err != nil {
 		return nil, err
-	}
-	for res.Next() {
-		m := new({{.ReturnType}})
-		err = res.Scan(m)
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, m)
 	}
 	return ret, nil
 	{{else}}
-	res, err := db.QueryRow({{.Query}}, args...)
-	if err != nil {
-		return nil, err
-	}
-	err = res.Scan(m)
+	res, err := db.Get(&ret, {{.Query}}, args...)
 	if err != nil {
 		return nil, err
 	}
