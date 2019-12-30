@@ -14,13 +14,17 @@ const DELETE = "DELETE FROM %s WHERE %s"
 const UPDATE = "UPDATE %s SET "
 const INSERT = "INSERT INTO %s (%s) VALUES (%s)"
 
-type method struct {
-	name, query, typ string
+type methodGenerator struct {
+	name, typ string
+	args      []string
+	fields    []string
+	returns   []string
+	query     string
 }
 
 var fset = token.NewFileSet()
 
-func Generate(bs []byte) []*method {
+func Generate(bs []byte) []*methodGenerator {
 	pf, err := parser.ParseFile(fset, "", bs, parser.ParseComments)
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +38,6 @@ func Generate(bs []byte) []*method {
 	var model *ast.StructType
 	var repo *ast.InterfaceType
 	var name string
-	_, _ = model, repo
 	for x := range xyzDecs {
 		typeSpec := xyzDecs[x].(*ast.GenDecl).Specs[0].(*ast.TypeSpec)
 		asStruct, isStruct := typeSpec.Type.(*ast.StructType)
@@ -48,27 +51,26 @@ func Generate(bs []byte) []*method {
 			repo = asInterface
 		}
 	}
-	methods := getListOfMethodsOfInterface(repo)
-	methods = append(methods, "Insert")
+	//			query: generate(name, methods[m], fields),
+
 	fields := getListOfFields(model)
-	var generatedMethods []*method
-	for m := range methods {
-		generatedMethods = append(generatedMethods, &method{methods[m], generate(name, methods[m], fields), typeOfMethod(methods[m])})
-	}
-	return generatedMethods
+	methods := getMethodsFromInterface(repo, fields, name)
+
+	return methods
+
 }
-func generate(tableName, name string, fields []string) string {
-	typ := typeOfMethod(name)
+func generate(tableName, methodName string, fields []string) string {
+	typ := typeOfMethod(methodName)
 	if typ == "Find" {
-		return selectGenerator(tableName, name)
+		return selectGenerator(tableName, methodName)
 	} else if typ == "Update" {
-		return updateGenerator(tableName, name)
+		return updateGenerator(tableName, methodName)
 	} else if typ == "Delete" {
-		return deleteGenerator(tableName, name)
+		return deleteGenerator(tableName, methodName)
 	} else if typ == "Insert" {
 		return insertGenerator(tableName, fields)
 	} else {
-		log.Fatalf("Method name %s is not valid\n", typ)
+		log.Fatalf("Method methodName %s is not valid\n", typ)
 		return ""
 	}
 }
