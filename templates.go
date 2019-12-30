@@ -48,7 +48,7 @@ type fileTemplateData struct {
 }
 
 const file = `package {{.PackageName}}
-	{{.Codes}}
+{{.Codes}}
 
 `
 

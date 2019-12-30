@@ -25,7 +25,7 @@ type method struct {
 
 var fset = token.NewFileSet()
 
-func Parse(bs []byte) ([]*method, string, string) {
+func Parse(bs []byte) ([]*method, string, string, string) {
 	pf, err := parser.ParseFile(fset, "", bs, parser.ParseComments)
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +58,7 @@ func Parse(bs []byte) ([]*method, string, string) {
 	fields := getListOfFields(model)
 	methods := getMethodsFromInterface(repo, fields, name)
 
-	return methods, interfaceName, interfaceName + "G"
+	return methods, interfaceName, interfaceName + "G", pf.Name.Name
 
 }
 func generate(tableName, methodName string, fields []string) string {

@@ -9,7 +9,7 @@ import (
 func main() {
 	var codes []string
 	bs, _ := ioutil.ReadFile("book.go")
-	methods, abstract, impl := Parse(bs)
+	methods, abstract, impl, pkg := Parse(bs)
 	for _, method := range methods {
 		templateData := &funcTemplateData{
 			SelfType:   impl,
@@ -39,7 +39,7 @@ func main() {
 	}
 	codes = append(codes, nCode)
 	file, err := Generate("file", &fileTemplateData{
-		PackageName: "db",
+		PackageName: pkg,
 		Codes:       strings.Join(codes, "\n"),
 	})
 	if err != nil {
