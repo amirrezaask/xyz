@@ -48,6 +48,9 @@ type fileTemplateData struct {
 }
 
 const file = `package {{.PackageName}}
+import (
+	"github.com/jmoiron/sqlx"
+)
 {{.Codes}}
 
 `
@@ -56,7 +59,7 @@ type newTemplateData struct {
 	AbstractName, ImplName string
 }
 
-const newFunc = `func New{{.AbstractName}}(db *sql.DB) ({{.AbstractName}}, error) {
+const newFunc = `func New{{.AbstractName}}(db *sqlx.DB) {{.AbstractName}} {
 	return &{{.ImplName}}{
 		db
 	}
@@ -86,7 +89,7 @@ const queryFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) ({{.Re
 }`
 
 const repoStruct = `type {{.SelfType}} struct {
-	db *sql.DB
+	db *sqlx.DB
 }`
 
 var Templates = map[string]string{

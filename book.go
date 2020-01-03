@@ -1,5 +1,7 @@
 package main
 
+//go:generate xyz $FILENAME > $FILENAME_gen.go
+
 //@xyz
 type Book struct {
 	Name, Title  string
@@ -9,7 +11,7 @@ type Book struct {
 
 //@xyz
 type BookRepository interface {
-	FindByNameAndId(name string) ([]Book, error)
-	UpdateNameAndFamilyNameBasedOnId(name string, fname string, id string) error
-	DeleteByName(name string) error
+	FindByNameAndId(args ...interface{}) ([]Book, error)
+	UpdateNameAndFamilyNameBasedOnId(args ...interface{}) error
+	DeleteByName(args ...interface{}) error
 }
