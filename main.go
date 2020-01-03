@@ -1,14 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 )
 
 func main() {
 	var codes []string
-	bs, _ := ioutil.ReadFile("book.go")
+	if len(os.Args) < 2 {
+		log.Fatal("Usage:\n xyz filename.go")
+	}
+	bs, _ := ioutil.ReadFile(os.Args[1])
 	methods, abstract, impl, pkg := Parse(bs)
 	for _, method := range methods {
 		templateData := &funcTemplateData{
@@ -45,7 +49,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(file)
+	generatedFileName := strings.Split(os.Args[1], ".")[0] + "_xyz.go"
+	err = ioutil.WriteFile(generatedFileName, []byte(file), 0644)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 var typ2typ = map[string]string{

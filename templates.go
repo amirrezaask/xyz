@@ -59,13 +59,13 @@ type newTemplateData struct {
 	AbstractName, ImplName string
 }
 
-const newFunc = `func New{{.AbstractName}}(db *sqlx.DB) {{.AbstractName}} {
+const newFunc = `func New{{.AbstractName}}(r.db *sqlx.r.db) {{.AbstractName}} {
 	return &{{.ImplName}}{
-		db
+		r.db,
 	}
 }`
 const execFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) error {
-	_, err := db.NamedExec("{{.Query}}", args...)
+	_, err := r.db.NamedExec("{{.Query}}", args...)
 	if err != nil {
 		return err
 	}
@@ -74,13 +74,13 @@ const execFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) error {
 const queryFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) ({{.ReturnsCommaSeperated}}) {
 	var ret {{.ReturnWithoutError}}
 	{{if .IsSlice .ReturnType}}
-	err := db.Select(&ret, "{{.Query}}", args...)
+	err := r.db.Select(&ret, "{{.Query}}", args...)
 	if err != nil {
 		return nil, err
 	}
 	return ret, nil
 	{{else}}
-	res, err := db.Get(&ret, "{{.Query}}", args...)
+	res, err := r.db.Get(&ret, "{{.Query}}", args...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ const queryFunc = `func (r *{{.SelfType}}) {{.Name}}(args ...interface{}) ({{.Re
 }`
 
 const repoStruct = `type {{.SelfType}} struct {
-	db *sqlx.DB
+	r.db *sqlx.r.db
 }`
 
 var Templates = map[string]string{

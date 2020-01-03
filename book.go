@@ -1,6 +1,6 @@
 package main
 
-//go:generate xyz $FILENAME > $FILENAME_gen.go
+//go:generate xyz $GOFILE
 
 //@xyz
 type Book struct {
